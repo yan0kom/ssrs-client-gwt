@@ -30,6 +30,7 @@ public class SpoilerMultiSelectParam extends Composite {
 		int allIdx = repParam.getIndexOfAll();
 		if (allIdx != -1) {
 			CheckBox allCheckbox = new CheckBox(repParam.getValidLabel(allIdx));
+			allCheckbox.setValue(repParam.isValidValueSelected(allIdx));			
 			allCheckbox.addValueChangeHandler((ValueChangeEvent<Boolean> event) -> {
 				CheckBox source = (CheckBox) event.getSource();
 				repParam.setValueByLabel(source.getText(), event.getValue());

@@ -1,25 +1,25 @@
-package ru.yan0kom.ssrs.client;
+package ru.yan0kom.ssrs.client.gwt;
 
 import com.google.gwt.event.logical.shared.SelectionEvent;
 import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.user.client.ui.TabPanel;
 
-public class TabbedReport extends TabPanel  {
+public class MultiTabReport extends TabPanel  {
 
-	public TabbedReport() {
-		setWidth("100%");
+	public MultiTabReport() {
+		setStyleName("multi-tab-report", true);
 		
 		addSelectionHandler(new SelectionHandler<Integer>() {
 			@Override
 			public void onSelection(SelectionEvent<Integer> event) {
-				ReportTab tab = (ReportTab) getWidget(event.getSelectedItem());
+				ReportViewer tab = (ReportViewer) getWidget(event.getSelectedItem());
 				tab.load();
 			}
 		});
 	}
 	
 	public void addTab(String name, String reportPath) {
-		add(new ReportTab(reportPath), name);
+		add(new ReportViewer(reportPath), name);
 	}
 
 }

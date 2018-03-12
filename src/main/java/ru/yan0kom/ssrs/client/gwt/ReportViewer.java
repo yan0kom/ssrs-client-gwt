@@ -6,6 +6,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
+import ru.yan0kom.ssrs.client.SsrsClientGwt;
 import ru.yan0kom.ssrs.client.gwt.ParametersBar;
 import ru.yan0kom.ssrs.client.service.ExecutionInfo;
 import ru.yan0kom.ssrs.client.service.ExecutionNotFoundException;
@@ -140,16 +141,10 @@ public class ReportViewer extends VerticalPanel
 	
 	@Override
 	public void onError(Response response, Throwable exception) {
-		if (exception != null) {
-			if (exception instanceof ExecutionNotFoundException) {
-				reload();
-			}else {
-				reportContent.setHTML(exception.getMessage());
-			}
-		}else if (response != null) {
-			reportContent.setHTML(response.getStatusText());
+		if (exception != null && exception instanceof ExecutionNotFoundException) {
+			reload();
 		}else {
-			reportContent.setHTML("Unknown error");
+			reportContent.setHTML(SsrsClientGwt.makeErrorMessage(response, exception));
 		}
 	}
 

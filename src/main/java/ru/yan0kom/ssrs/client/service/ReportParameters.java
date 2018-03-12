@@ -94,12 +94,14 @@ public class ReportParameters {
 		}
 		
 		/** Returns index of special "All" value
-		 * for string it is '*', for int - 0
+		 * for string it is '*', for int is 0
 		 */
 		public int getIndexOfAll() {
 			switch (type) {
-				case "String":
+				case "STRING":
 					return validValues.indexOf("*");
+				case "INTEGER":
+					return validValues.indexOf("0");
 			}
 			return -1;
 		}

@@ -12,11 +12,24 @@ import com.google.gwt.user.client.Window;
 import com.google.web.bindery.autobean.shared.AutoBean;
 import com.google.web.bindery.autobean.shared.AutoBeanCodex;
 
-//import ru.shipsea.ssrs.client.MopeSsrsClient;
+//import ru.yan0kom.ssrs.client.SsrsClientGwt;
 
 public class ReportService {
 	public static String backendUrl = "/ssrs-client-back";
 	public static String renderFormat = "HTML40";
+	
+	private static abstract class RequestBuilderCallback implements RequestCallback {
+		private ReportServiceErrorCallback errorCallback;
+		
+		public RequestBuilderCallback(ReportServiceErrorCallback errorCallback) {
+			this.errorCallback = errorCallback;
+		}
+		
+		@Override
+		public void onError(Request request, Throwable exception) {
+			errorCallback.onError(null, exception);		
+		}
+	}
 	
 	public static void load(String path, final ReportServiceLoadCallback callback) {
 		StringBuilder query = new StringBuilder(backendUrl);
@@ -25,7 +38,7 @@ public class ReportService {
 		RequestBuilder rb = new RequestBuilder(RequestBuilder.GET, URL.encode(query.toString()));
 		rb.setHeader("Content-Type", "application/json; charset=utf-8");
 		try {
-			rb.sendRequest(null, new RequestCallback() {
+			rb.sendRequest(null, new RequestBuilderCallback(callback) {
 				@Override
 				public void onResponseReceived(Request request, Response response) {
 					if (200 == response.getStatusCode()) {
@@ -35,10 +48,29 @@ public class ReportService {
 						callback.onError(response, null);
 					}
 				}
+			});
+		} catch (RequestException exception) {
+			callback.onError(null, exception);
+		}		
+	}
 
+	public static void getExt(String path, final ReportServiceGetExtCallback callback) {
+		StringBuilder query = new StringBuilder(backendUrl);
+		query.append("/run/ext?path=");
+		query.append(path);
+		RequestBuilder rb = new RequestBuilder(RequestBuilder.GET, URL.encode(query.toString()));
+		rb.setHeader("Content-Type", "application/json; charset=utf-8");
+		try {
+			rb.sendRequest(null, new RequestBuilderCallback(callback) {
 				@Override
-				public void onError(Request request, Throwable exception) {
-					callback.onError(null, exception);
+				public void onResponseReceived(Request request, Response response) {
+					if (200 == response.getStatusCode()) {
+						ServiceBeanFactory factory = GWT.create(ServiceBeanFactory.class);
+						AutoBean<ReportExt> bean = AutoBeanCodex.decode(factory, ReportExt.class, response.getText());
+						callback.onGetExt(bean.as());
+					} else {
+						callback.onError(response, null);
+					}
 				}
 			});
 		} catch (RequestException exception) {
@@ -55,7 +87,7 @@ public class ReportService {
 		rr.as().setParameters(params.getAllParamValues());
 		rb.setRequestData(AutoBeanCodex.encode(rr).getPayload());
 		
-		rb.setCallback(new RequestCallback() {			
+		rb.setCallback(new RequestBuilderCallback(callback) {
 			@Override
 			public void onResponseReceived(Request request, Response response) {
 				if (200 == response.getStatusCode()) {
@@ -63,10 +95,6 @@ public class ReportService {
 				}else {
 					handleError(response, callback);
 				}
-			}
-			@Override
-			public void onError(Request request, Throwable exception) {
-				callback.onError(null, exception);
 			}
 		});
 		
@@ -80,7 +108,7 @@ public class ReportService {
 	public static void render(String executionId, String path, ReportParameters params, final ReportServiceRenderCallback callback) {
 		RequestBuilder rb = new RequestBuilder(RequestBuilder.GET, buildQuery("render", executionId, path, renderFormat, null));		
 		rb.setHeader("Content-Type", "application/json; charset=utf-8");		
-		rb.setCallback(new RequestCallback() {			
+		rb.setCallback(new RequestBuilderCallback(callback) {
 			@Override
 			public void onResponseReceived(Request request, Response response) {
 				if (200 == response.getStatusCode()) {
@@ -88,10 +116,6 @@ public class ReportService {
 				}else {
 					handleError(response, callback);
 				}
-			}
-			@Override
-			public void onError(Request request, Throwable exception) {
-				callback.onError(null, exception);
 			}
 		});
 		
@@ -124,7 +148,7 @@ public class ReportService {
 		}		
 	}
 	
-	private static String buildQuery(String method, String executionId, String path, String format, String fileName) {
+	private static String buildQuery(String method, String executionId, String path, String format, String filename) {
 		StringBuilder query = new StringBuilder("/ssrs-client-back/run/");
 		query.append(method);
 		query.append("?executionId=");
@@ -137,9 +161,12 @@ public class ReportService {
 			query.append("&format=");
 			query.append(format);			
 		}	
-		if (fileName != null) {
-			query.append("&fileName=");
-			query.append(fileName);			
+		if (filename != null) {
+			query.append("&attachment");			
+			if (!filename.isEmpty()) {
+				query.append("&filename=");
+				query.append(filename);
+			}
 		}
 		return query.toString();
 	}
