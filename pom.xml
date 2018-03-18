@@ -92,6 +92,7 @@
 					documentation at codehaus.org -->
 				<configuration>
 					<inplace>true</inplace>
+					<compilerArgs>generateJsInteropExports</compilerArgs>
 					<modules>
 						<module>ru.yan0kom.ssrs.SsrsClient</module>
 					</modules>

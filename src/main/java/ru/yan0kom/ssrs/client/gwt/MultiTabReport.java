@@ -12,14 +12,14 @@ public class MultiTabReport extends TabPanel  {
 		addSelectionHandler(new SelectionHandler<Integer>() {
 			@Override
 			public void onSelection(SelectionEvent<Integer> event) {
-				ReportViewer tab = (ReportViewer) getWidget(event.getSelectedItem());
+				ReportView tab = (ReportView) getWidget(event.getSelectedItem());
 				tab.load();
 			}
 		});
 	}
 	
 	public void addTab(String name, String reportPath) {
-		add(new ReportViewer(reportPath), name);
+		add(new ReportView(reportPath), name);
 	}
 
 }
