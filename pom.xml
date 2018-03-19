@@ -13,9 +13,6 @@
 	<properties>
 		<!-- Convenience property to set the GWT version -->
 		<gwtVersion>2.8.2</gwtVersion>
-		<!-- Note: GWT needs at least java 1.6 -->
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 
 	<dependencyManagement>
@@ -26,6 +23,7 @@
 				<artifactId>gwt</artifactId>
 				<version>${gwtVersion}</version>
 				<scope>import</scope>
+				<type>pom</type>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -66,6 +64,26 @@
 	<build>
 
 		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.2.0</version>
+			</plugin>
 
 			<!-- GWT Maven Plugin -->
 			<plugin>
@@ -92,14 +110,14 @@
 					documentation at codehaus.org -->
 				<configuration>
 					<inplace>true</inplace>
-					<compilerArgs>generateJsInteropExports</compilerArgs>
+					<generateJsInteropExports>true</generateJsInteropExports>
 					<modules>
 						<module>ru.yan0kom.ssrs.SsrsClient</module>
 					</modules>
 					<!-- URL that should be opened by DevMode (gwt:run). -->
 					<runTarget>index.html</runTarget>
 					<!-- Ask GWT to create the Story of Your Compile (SOYC) (gwt:compile) -->
-					<compileReport>true</compileReport>
+					<compileReport>false</compileReport>
 					<!-- Run tests using HtmlUnit -->
 					<mode>htmlunit</mode>
 					<!-- Tests patterns -->

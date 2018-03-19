@@ -37,6 +37,23 @@ h1 {
   font-weight: normal !important;
 }
 
+.gwt-MenuBar-horizontal .gwt-MenuItem-disabled {
+  color: #777777 !important;
+}
+
+.gwt-DisclosurePanel-disabled .header td {
+  color: #777777 !important;	
+}
+
+.param-label {
+	margin-right: 5px;
+	white-space: nowrap; 
+}
+
+.param-label-disabled {
+	color: #777777;
+}
+
 .parameters-bar {
   background-image: none !important;
   width: 100%;

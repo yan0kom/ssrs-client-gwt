@@ -1,4 +1,4 @@
-package ru.yan0kom.ssrs.client.service;
+package ru.yan0kom.ssrs.client.bean;
 
 import java.util.List;
 
@@ -15,4 +15,7 @@ public interface ReportExt {
 	
 	List<Tab> getTabs();
 	void setTabs(List<Tab> tabs);
+	
+	List<Parameter> getParameters();
+	void setParameters(List<Parameter> parameters);	
 }

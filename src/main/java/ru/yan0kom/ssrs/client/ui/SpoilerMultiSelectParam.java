@@ -1,4 +1,4 @@
-package ru.yan0kom.ssrs.client.gwt;
+package ru.yan0kom.ssrs.client.ui;
 
 import java.util.function.Consumer;
 
@@ -6,18 +6,21 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DisclosurePanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
-import ru.yan0kom.ssrs.client.service.ReportParameters.ReportParameter;
+import ru.yan0kom.ssrs.client.service.ParametersDefinition.ParameterDefinition;
 
-public class SpoilerMultiSelectParam extends Composite {
+public class SpoilerMultiSelectParam extends ParamInput {
 	private boolean valuesChanged;
+	private boolean enabled;
+	private CheckBox allCheckbox;
+	private DisclosurePanel disclosurePanel;
 
-	public SpoilerMultiSelectParam(ReportParameter repParam, Consumer<ReportParameter> changeCallback) {
+	public SpoilerMultiSelectParam(ParameterDefinition repParam, Consumer<ParameterDefinition> changeCallback) {
 		valuesChanged = false;
+		enabled = true;
 		
 		//handler for checkbox with value (except "All")
 		ValueChangeHandler<Boolean> checkboxHandler = (ValueChangeEvent<Boolean> event) -> {
@@ -29,7 +32,7 @@ public class SpoilerMultiSelectParam extends Composite {
 		HorizontalPanel panel = new HorizontalPanel();
 		int allIdx = repParam.getIndexOfAll();
 		if (allIdx != -1) {
-			CheckBox allCheckbox = new CheckBox(repParam.getValidLabel(allIdx));
+			allCheckbox = new CheckBox(repParam.getValidLabel(allIdx));
 			allCheckbox.setValue(repParam.isValidValueSelected(allIdx));			
 			allCheckbox.addValueChangeHandler((ValueChangeEvent<Boolean> event) -> {
 				CheckBox source = (CheckBox) event.getSource();
@@ -41,12 +44,17 @@ public class SpoilerMultiSelectParam extends Composite {
 			panel.add(allCheckbox);
 		}
 		
-		DisclosurePanel dis = new DisclosurePanel("Выбрать");
-		dis.addCloseHandler((event) -> {
+		disclosurePanel = new DisclosurePanel("Выбрать");		
+		disclosurePanel.addCloseHandler((event) -> {
 			if (valuesChanged && changeCallback != null) {
 				changeCallback.accept(repParam);
 			}
 			valuesChanged = false;
+		});
+		disclosurePanel.addOpenHandler((event) -> {
+			if (!enabled) {
+				disclosurePanel.setOpen(false);
+			}
 		});
 		
 		VerticalPanel checkList = new VerticalPanel();		
@@ -61,8 +69,20 @@ public class SpoilerMultiSelectParam extends Composite {
 			checkList.add(valCheckbox);
 		}
 
-		dis.setContent(checkList);
-		panel.add(dis);
+		disclosurePanel.setContent(checkList);
+		panel.add(disclosurePanel);
 		initWidget(panel);
+	}
+
+	@Override
+	public void setEnabled(boolean enable) {
+		enabled = enable;
+		if (allCheckbox != null) {
+			allCheckbox.setEnabled(enable);
+		}		
+		if (!enabled) {
+			disclosurePanel.setOpen(false);
+		}
+		disclosurePanel.setStyleName("gwt-DisclosurePanel-disabled", !enable);
 	}
 }

@@ -5,7 +5,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 
-import ru.yan0kom.ssrs.client.gwt.ReportViewer;
+import ru.yan0kom.ssrs.client.ui.ReportViewer;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.

@@ -2,8 +2,8 @@ package ru.yan0kom.ssrs.client.service;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public class ValidValue extends JavaScriptObject {
-	  protected ValidValue() {
+public class RdlValidValue extends JavaScriptObject {
+	  protected RdlValidValue() {
 	  }
 	  
 	  public final native String getLabel() /*-{ return this.label; }-*/;

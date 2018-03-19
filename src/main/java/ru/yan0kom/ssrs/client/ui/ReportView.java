@@ -1,32 +1,44 @@
-package ru.yan0kom.ssrs.client.gwt;
+package ru.yan0kom.ssrs.client.ui;
 
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.MenuBar;
+import com.google.gwt.user.client.ui.MenuItem;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
-import ru.yan0kom.ssrs.client.gwt.ParametersBar;
-import ru.yan0kom.ssrs.client.service.ExecutionInfo;
+import ru.yan0kom.ssrs.client.bean.ReportExt;
+import ru.yan0kom.ssrs.client.service.RdlExecutionInfo;
 import ru.yan0kom.ssrs.client.service.ExecutionNotFoundException;
-import ru.yan0kom.ssrs.client.service.ReportParameters;
+import ru.yan0kom.ssrs.client.service.ParametersDefinition;
 import ru.yan0kom.ssrs.client.service.ReportService;
 import ru.yan0kom.ssrs.client.service.ReportServiceLoadCallback;
 import ru.yan0kom.ssrs.client.service.ReportServiceParameterizeCallback;
 import ru.yan0kom.ssrs.client.service.ReportServiceRenderCallback;
+import ru.yan0kom.ssrs.client.ui.ParametersBar;
 
 public class ReportView extends Composite 
 		implements ReportServiceLoadCallback, ReportServiceParameterizeCallback, ReportServiceRenderCallback {
+	
 	private HTML reportContent;
 	private ParametersBar parametersBar;
-	private ReportParameters reportParams;
-	private ExecutionInfo executionInfo;
+	private ReportMenu menu;
+	private ParametersDefinition reportParams;
+	private RdlExecutionInfo executionInfo;
 	private boolean parametersInitialized;
-	private String path;
+	private ReportExt ext;	
+	
+	private class ReportMenu extends MenuBar {
+		public void setEnabled(boolean enable) {
+			for (MenuItem item : getItems()){
+				item.setEnabled(enable);
+			}
+		}
+	};	
 
-	public ReportView(String path) {
-		this.path = path;
+	public ReportView(ReportExt ext) {
+		this.ext = ext;
 		VerticalPanel container = new VerticalPanel();
 				
 		//params
@@ -40,33 +52,41 @@ public class ReportView extends Composite
 		container.add(reportContent);
 		
 		//actions		
-		final MenuBar menu = new MenuBar();
-				
-		Command cmdRefresh = new Command() {
-			@Override
-			public void execute() {
-				reload();
-			}	
-		};
-		menu.addItem("Обновить", cmdRefresh);
+		menu = new ReportMenu();
+
+		if (ReportViewer.getInstance().isShowReturn()) {
+			menu.addItem("Возврат", () -> {
+				ReportViewer.getInstance().goFirst();
+			});
+			
+		}
+		if (ReportViewer.getInstance().isShowBack()) {
+			menu.addItem("Назад", () -> {
+				ReportViewer.getInstance().goBack();
+			});
+			
+		}
+		menu.addItem("Обновить", () -> {
+			reload();
+		});
 		
-		final MenuBar menuPrint = new MenuBar(true);
+		MenuBar menuPrint = new MenuBar(true);
 		menuPrint.addItem("PDF для печати", () -> {
-			ReportService.print(executionInfo.getExecutionId(), path, "PDF", reportParams);
+			ReportService.print(executionInfo.getExecutionId(), ext.getPath(), "PDF", reportParams);
 		});
 		menuPrint.addItem("HTML для печати", () -> {
-			ReportService.print(executionInfo.getExecutionId(), path, "HTML40", reportParams);
+			ReportService.print(executionInfo.getExecutionId(), ext.getPath(), "HTML40", reportParams);
 		});
 		menu.addItem("Печать", menuPrint);
 		
-		final MenuBar menuExport = new MenuBar(true);
+		MenuBar menuExport = new MenuBar(true);
 		menuExport.addItem("PDF", makeExportCommand("PDF"));
 		menuExport.addItem("Excel 2007+", makeExportCommand("EXCELOPENXML"));		
 		menuExport.addItem("Powerpoint 2007+", makeExportCommand("PPTX"));
 		menuExport.addItem("Word 2007+", makeExportCommand("WORDOPENXML"));
 		menuExport.addItem("Web-архив (.mht)", makeExportCommand("MHTML"));
 		
-		final MenuBar menuExportData = new MenuBar(true);
+		MenuBar menuExportData = new MenuBar(true);
 		menuExportData.addItem("Формат CSV", makeExportCommand("CSV"));
 		//menuExportData.addItem("Формат с разделением табуляцией", cmdRefresh);
 		menuExportData.addItem("Формат XML", makeExportCommand("XML"));
@@ -77,13 +97,14 @@ public class ReportView extends Composite
 		container.add(menu);
 		
 		initWidget(container);
-		setStyleName("report-view", true);
+		setStyleName("report-view", true);		
 	}
 	
 	public void load() {
 		if (executionInfo == null) {
+			setEnabled(false);
 			reportContent.setHTML("<br><br><i>Загрузка отчета...</i><br><br>");
-			ReportService.load(path, this);
+			ReportService.load(ext.getPath(), this);
 		}
 	}
 	
@@ -102,28 +123,34 @@ public class ReportView extends Composite
 		return new Command() {
 			@Override
 			public void execute() {
-				ReportService.export(executionInfo.getExecutionId(), path, format, getName(), reportParams);
+				ReportService.export(executionInfo.getExecutionId(), ext.getPath(), format, getName(), reportParams);
 			}
 		};
 	}
 	
 	private String getName() {
-		String parts[] = path.split("/");
+		String parts[] = ext.getPath().split("/");
 		if (parts.length > 2) {
 			return parts[2] + "_" + parts[3];	
 		}
 		return "report";
 	}
 	
+	private void setEnabled(boolean enable) {
+		parametersBar.setEnabled(enable);
+		menu.setEnabled(enable);
+	}
+	
 	@Override
-	public void onLoad(ExecutionInfo info) {
+	public void onLoad(RdlExecutionInfo info) {
 		executionInfo = info;
 		if (parametersInitialized) {
 			refresh();
 			return;
 		}
 					
-		reportParams = new ReportParameters(info.getParameters());
+		reportParams = new ParametersDefinition(info.getParameters());
+		reportParams.setValues(ext.getParameters());
 		parametersBar.build(reportParams);
 		parametersInitialized = true;
 		
@@ -133,12 +160,13 @@ public class ReportView extends Composite
 
 	@Override
 	public void onParameterize() {
-		ReportService.render(executionInfo.getExecutionId(), path, reportParams, this);			
+		ReportService.render(executionInfo.getExecutionId(), ext.getPath(), reportParams, this);			
 	}
 
 	@Override
 	public void onRender(String html) {
 		reportContent.setHTML(html);
+		setEnabled(true);
 	}
 	
 	@Override

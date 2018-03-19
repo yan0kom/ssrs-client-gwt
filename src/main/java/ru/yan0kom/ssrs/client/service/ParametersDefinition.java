@@ -2,24 +2,19 @@ package ru.yan0kom.ssrs.client.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
 import com.google.gwt.core.client.GWT;
 import com.google.web.bindery.autobean.shared.AutoBean;
 
-public class ReportParameters {
+import ru.yan0kom.ssrs.client.bean.Parameter;
+import ru.yan0kom.ssrs.client.bean.ServiceBeanFactory;
+
+public class ParametersDefinition {
 	
-	public class Tuple {
-		public String first;
-		public String second;
-		public Tuple(String first, String second) {
-			this.first = first;
-			this.second = second;
-		}
-	}
-	
-	public static class ReportParameter {
+	public static class ParameterDefinition {
 		private String name;
 		private String label;
 		private String type;
@@ -28,7 +23,7 @@ public class ReportParameters {
 		private List<String> validValues;
 		private List<String> validLabels;
 		
-		public ReportParameter(Parameter sourceParam) {
+		public ParameterDefinition(RdlParameter sourceParam) {
 			this();
 			name = sourceParam.getName();
 			label = sourceParam.getPrompt();
@@ -36,7 +31,7 @@ public class ReportParameters {
 			multiValue = sourceParam.isMultiValue();			
 			
 			if (sourceParam.getValidValues() != null) {
-				for (ValidValue sourceValidValue : sourceParam.getValidValues()) {
+				for (RdlValidValue sourceValidValue : sourceParam.getValidValues()) {
 					validLabels.add(sourceValidValue.getLabel());
 					validValues.add(sourceValidValue.getValue());
 				}
@@ -49,7 +44,7 @@ public class ReportParameters {
 			}
 		}
 		
-		public ReportParameter() {
+		public ParameterDefinition() {
 			validValues = new ArrayList<>();
 			validLabels = new ArrayList<>();
 			values = new LinkedList<>();
@@ -104,6 +99,10 @@ public class ReportParameters {
 					return validValues.indexOf("0");
 			}
 			return -1;
+		}
+		
+		public boolean isHidden() {
+			return (label == null || label.isEmpty());
 		}
 		
 		public int getValidValuesCount() {
@@ -167,66 +166,71 @@ public class ReportParameters {
 		
 	}
 	
-	private List<ReportParameter> params;
+	private List<ParameterDefinition> paramList;
+	private HashMap<String, ParameterDefinition> paramMap;
 	
-	public ReportParameters(Parameter[] sourceParams) {
-		params = new ArrayList<>();
+	public ParametersDefinition(RdlParameter[] sourceParams) {
+		paramList = new ArrayList<>();
+		paramMap = new HashMap<>();
 		if (sourceParams != null) {
-			for (Parameter sourceParam : sourceParams) {
-				params.add(new ReportParameter(sourceParam));
+			for (RdlParameter sourceParam : sourceParams) {
+				ParameterDefinition pd = new ParameterDefinition(sourceParam);
+				paramList.add(pd);
+				paramMap.put(sourceParam.getName(), pd);
 			}
 		}
 	}
 	
-	public ReportParameters() {
+	public ParametersDefinition() {
 		this(null);
 	}
 
 	public int getCount() {
-		return params.size();
+		return paramList.size();
 	}
 	
-	public void add(ReportParameter param) {
-		params.add(param);
+	/** returns visible parameters count */
+	public int getVisibleCount() {
+		int cnt = 0;
+		for (ParameterDefinition param : paramList) {
+			if (!param.isHidden()) {
+				++cnt;
+			}
+		}
+		return cnt;
+	}	
+	
+	public void add(ParameterDefinition param) {
+		paramList.add(param);
 	}
 	
-	public ReportParameter get(int index) {
-		return params.get(index);
+	public ParameterDefinition get(int index) {
+		return paramList.get(index);
 	}
 
 	public void set(int index, String value) {
-		params.get(index).setValue(value);
+		paramList.get(index).setValue(value);
 	}
 
 	public void setByLabel(int index, String label) {
-		params.get(index).setValueByLabel(label);
+		paramList.get(index).setValueByLabel(label);
 	}
 
 	public void unset(int index, String value) {
-		params.get(index).unsetValue(value);
+		paramList.get(index).unsetValue(value);
 	}
 	
 	public void unsetByLabel(int index, String label) {
-		params.get(index).unsetValueByLabel(label);
+		paramList.get(index).unsetValueByLabel(label);
 	}	
 	
-	public List<Tuple> getAllValues() {
-		List<Tuple> all = new LinkedList<>();
-		for (ReportParameter param : params) {
-			for (String val : param.getValues()) {
-				all.add(new Tuple(param.getName(), val));				
-			}
-		}
-		return all;
-	}
-
-	public List<ParameterizeRequest.Parameter> getAllParamValues() {
+	public List<Parameter> getAllParamValues() {
 		ServiceBeanFactory factory = GWT.create(ServiceBeanFactory.class);
-		List<ParameterizeRequest.Parameter> rrpList = new LinkedList<>(); 
+		List<Parameter> rrpList = new LinkedList<>(); 
 		
-		for (ReportParameter param : params) {
+		for (ParameterDefinition param : paramList) {
 			for (String val : param.getValues()) {
-				AutoBean<ParameterizeRequest.Parameter> rrp = factory.parameter();
+				AutoBean<Parameter> rrp = factory.parameter();
 				rrp.as().setName(param.getName());
 				rrp.as().setValue(val);
 				rrpList.add(rrp.as());
@@ -235,4 +239,14 @@ public class ReportParameters {
 		return rrpList;
 	}
 	
+	public void setValues(List<Parameter> vals) {
+		if (vals != null) {
+			for (Parameter val : vals) {
+				ParameterDefinition pd = paramMap.get(val.getName());
+				if (pd != null) {
+					pd.setValue(val.getValue());
+				}
+			}
+		}
+	}
 }

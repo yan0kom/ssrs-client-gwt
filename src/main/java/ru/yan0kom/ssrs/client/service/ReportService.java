@@ -12,6 +12,10 @@ import com.google.gwt.user.client.Window;
 import com.google.web.bindery.autobean.shared.AutoBean;
 import com.google.web.bindery.autobean.shared.AutoBeanCodex;
 
+import ru.yan0kom.ssrs.client.bean.Parameters;
+import ru.yan0kom.ssrs.client.bean.ReportExt;
+import ru.yan0kom.ssrs.client.bean.ServiceBeanFactory;
+
 //import ru.yan0kom.ssrs.client.SsrsClientGwt;
 
 public class ReportService {
@@ -42,7 +46,7 @@ public class ReportService {
 				@Override
 				public void onResponseReceived(Request request, Response response) {
 					if (200 == response.getStatusCode()) {
-						ExecutionInfo info = JsonUtils.safeEval(response.getText());
+						RdlExecutionInfo info = JsonUtils.safeEval(response.getText());
 						callback.onLoad(info);
 					} else {
 						callback.onError(response, null);
@@ -54,7 +58,7 @@ public class ReportService {
 		}		
 	}
 
-	public static void getExt(String path, final ReportServiceGetExtCallback callback) {
+	public static void getExt(String path, Parameters params, final ReportServiceGetExtCallback callback) {
 		StringBuilder query = new StringBuilder(backendUrl);
 		query.append("/run/ext?path=");
 		query.append(path);
@@ -67,6 +71,7 @@ public class ReportService {
 					if (200 == response.getStatusCode()) {
 						ServiceBeanFactory factory = GWT.create(ServiceBeanFactory.class);
 						AutoBean<ReportExt> bean = AutoBeanCodex.decode(factory, ReportExt.class, response.getText());
+						bean.as().setParameters(params.getParameters());
 						callback.onGetExt(bean.as());
 					} else {
 						callback.onError(response, null);
@@ -78,12 +83,12 @@ public class ReportService {
 		}		
 	}
 	
-	public static void parameterize(String executionId, ReportParameters params, final ReportServiceParameterizeCallback callback) {
+	public static void parameterize(String executionId, ParametersDefinition params, final ReportServiceParameterizeCallback callback) {
 		RequestBuilder rb = new RequestBuilder(RequestBuilder.POST, buildQuery("parameterize", executionId, null, null, null));		
 		rb.setHeader("Content-Type", "application/json; charset=utf-8");
 		
 		ServiceBeanFactory factory = GWT.create(ServiceBeanFactory.class);
-		AutoBean<ParameterizeRequest> rr = factory.renderRequest();
+		AutoBean<Parameters> rr = factory.parameters();
 		rr.as().setParameters(params.getAllParamValues());
 		rb.setRequestData(AutoBeanCodex.encode(rr).getPayload());
 		
@@ -105,7 +110,7 @@ public class ReportService {
 		}		
 	}	
 	
-	public static void render(String executionId, String path, ReportParameters params, final ReportServiceRenderCallback callback) {
+	public static void render(String executionId, String path, ParametersDefinition params, final ReportServiceRenderCallback callback) {
 		RequestBuilder rb = new RequestBuilder(RequestBuilder.GET, buildQuery("render", executionId, path, renderFormat, null));		
 		rb.setHeader("Content-Type", "application/json; charset=utf-8");		
 		rb.setCallback(new RequestBuilderCallback(callback) {
@@ -126,11 +131,11 @@ public class ReportService {
 		}		
 	}
 	
-	public static void export(String executionId, String path, String format, String fileName, ReportParameters params) {
+	public static void export(String executionId, String path, String format, String fileName, ParametersDefinition params) {
 		Window.open(buildQuery("render", executionId, path, format, fileName), "_self", null);
 	}
 
-	public static void print(String executionId, String path, String format, ReportParameters params) {
+	public static void print(String executionId, String path, String format, ParametersDefinition params) {
 		Window.open(buildQuery("render", executionId, path, format, null), "_blank", null);
 	}
 	
