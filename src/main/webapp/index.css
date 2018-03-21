@@ -61,6 +61,10 @@ h1 {
   margin-bottom: 10px;
 }
 
+.report-content {
+  margin-top: 5px;
+}
+
 .report-view {
   width: 100%;
 }

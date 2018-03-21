@@ -6,7 +6,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.web.bindery.autobean.shared.AutoBean;
 import com.google.web.bindery.autobean.shared.AutoBeanCodex;
 
@@ -38,25 +38,25 @@ public class ReportViewer implements ReportServiceGetExtCallback {
 	
 	@Override
 	public void onError(Response response, Throwable exception) {
-		RootPanel.get().add(new Label(makeErrorMessage(response, exception)));		
+		RootLayoutPanel.get().add(new Label(makeErrorMessage(response, exception)));		
 	}
 
 	@Override
 	public void onGetExt(ReportExt ext) {
-		RootPanel.get().clear();
+		RootLayoutPanel.get().clear();
 		
 		if (ext.getTabs() == null) {
 			ReportView report = new ReportView(ext);
-			report.load();
 			reportStack.push(report);
-			RootPanel.get().add(report);
+			RootLayoutPanel.get().add(report);
+			report.load();
 		}else {
 			MultiTabReport mtReport = new MultiTabReport(ext);
+			reportStack.push(mtReport);
+			RootLayoutPanel.get().add(mtReport);
 			if (ext.getTabs().size() > 0) {
 				mtReport.selectTab(0);
 			}
-			reportStack.push(mtReport);
-			RootPanel.get().add(mtReport);
 		}
 	}
 	
@@ -82,7 +82,7 @@ public class ReportViewer implements ReportServiceGetExtCallback {
 		AutoBean<Parameters> bean = AutoBeanCodex.decode(factory, Parameters.class, json);
 		ReportService.getExt(linkPath, bean.as(), instance);
 
-		SsrsClientGwt.print(linkPath+", "+AutoBeanCodex.encode(bean).getPayload() + ", " + json);		
+		SsrsClientGwt.print(linkPath+", "+AutoBeanCodex.encode(bean).getPayload());		
 	}
 	
 	public boolean isShowReturn() {
@@ -90,9 +90,9 @@ public class ReportViewer implements ReportServiceGetExtCallback {
 	}
 
 	public void goFirst() {
-		RootPanel.get().clear();
+		RootLayoutPanel.get().clear();
 		reportStack.setSize(1);
-		RootPanel.get().add(reportStack.peek());
+		RootLayoutPanel.get().add(reportStack.peek());
 	}
 
 	public boolean isShowBack() {
@@ -100,9 +100,9 @@ public class ReportViewer implements ReportServiceGetExtCallback {
 	}
 
 	public void goBack() {
-		RootPanel.get().clear();
+		RootLayoutPanel.get().clear();
 		reportStack.pop();
-		RootPanel.get().add(reportStack.peek());
+		RootLayoutPanel.get().add(reportStack.peek());
 	}
 	
 }

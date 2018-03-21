@@ -3,8 +3,7 @@ package ru.yan0kom.ssrs.client;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.RootPanel;
-
+import com.google.gwt.user.client.ui.RootLayoutPanel;
 import ru.yan0kom.ssrs.client.ui.ReportViewer;
 
 /**
@@ -24,7 +23,7 @@ public class SsrsClientGwt implements EntryPoint {
 		}
 		
 		if (reportPath == null || reportPath.isEmpty()) {
-			RootPanel.get().add(new Label("Usage: index.html?/path/to/report"));
+			RootLayoutPanel.get().add(new Label("Usage: index.html?/path/to/report"));
 			return;
 		}
 		

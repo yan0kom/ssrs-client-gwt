@@ -1,13 +1,14 @@
 package ru.yan0kom.ssrs.client.ui;
 
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
-import com.google.gwt.user.client.ui.VerticalPanel;
-
+import com.google.gwt.user.client.ui.ScrollPanel;
 import ru.yan0kom.ssrs.client.bean.ReportExt;
 import ru.yan0kom.ssrs.client.service.RdlExecutionInfo;
 import ru.yan0kom.ssrs.client.service.ExecutionNotFoundException;
@@ -24,6 +25,7 @@ public class ReportView extends Composite
 	private HTML reportContent;
 	private ParametersBar parametersBar;
 	private ReportMenu menu;
+	private DockLayoutPanel container;
 	private ParametersDefinition reportParams;
 	private RdlExecutionInfo executionInfo;
 	private boolean parametersInitialized;
@@ -39,17 +41,13 @@ public class ReportView extends Composite
 
 	public ReportView(ReportExt ext) {
 		this.ext = ext;
-		VerticalPanel container = new VerticalPanel();
+		container = new DockLayoutPanel(Unit.PX);
 				
 		//params
 		parametersBar = new ParametersBar((param) -> {
 			reload();
 		});		
-		container.add(parametersBar);
-		
-		//content
-		reportContent = new HTML();		
-		container.add(reportContent);
+		container.addNorth(parametersBar, 50);
 		
 		//actions		
 		menu = new ReportMenu();
@@ -81,7 +79,7 @@ public class ReportView extends Composite
 		
 		MenuBar menuExport = new MenuBar(true);
 		menuExport.addItem("PDF", makeExportCommand("PDF"));
-		menuExport.addItem("Excel 2007+", makeExportCommand("EXCELOPENXML"));		
+		menuExport.addItem("Excel 2007+", makeExportCommand("EXCELOPENXML"));
 		menuExport.addItem("Powerpoint 2007+", makeExportCommand("PPTX"));
 		menuExport.addItem("Word 2007+", makeExportCommand("WORDOPENXML"));
 		menuExport.addItem("Web-архив (.mht)", makeExportCommand("MHTML"));
@@ -94,7 +92,12 @@ public class ReportView extends Composite
 		
 		menu.addItem("Экспорт", menuExport);
 		
-		container.add(menu);
+		container.addSouth(menu, 30);
+		
+		//content
+		reportContent = new HTML();
+		reportContent.setStyleName("report-content");
+		container.add(new ScrollPanel(reportContent));
 		
 		initWidget(container);
 		setStyleName("report-view", true);		
@@ -155,6 +158,7 @@ public class ReportView extends Composite
 		parametersInitialized = true;
 		
 		reportContent.setHTML("<br><br><i>Определение отчета загружено</i><br><br>");
+		container.setWidgetSize(parametersBar, parametersBar.getOffsetHeight());
 		refresh();
 	}
 
