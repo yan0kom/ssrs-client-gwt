@@ -7,7 +7,6 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.MenuBar;
-import com.google.gwt.user.client.ui.MenuItem;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import ru.yan0kom.ssrs.client.bean.ReportExt;
 import ru.yan0kom.ssrs.client.service.RdlExecutionInfo;
@@ -24,21 +23,13 @@ public class ReportView extends Composite
 	
 	private HTML reportContent;
 	private ParametersBar parametersBar;
-	private ReportMenu menu;
+	private MenuBar menu;
 	private DockLayoutPanel container;
 	private ParametersDefinition reportParams;
 	private RdlExecutionInfo executionInfo;
 	private boolean parametersInitialized;
 	private ReportExt ext;	
 	
-	private class ReportMenu extends MenuBar {
-		public void setEnabled(boolean enable) {
-			for (MenuItem item : getItems()){
-				item.setEnabled(enable);
-			}
-		}
-	};	
-
 	public ReportView(ReportExt ext) {
 		this.ext = ext;
 		container = new DockLayoutPanel(Unit.PX);
@@ -50,7 +41,8 @@ public class ReportView extends Composite
 		container.addNorth(parametersBar, 50);
 		
 		//actions		
-		menu = new ReportMenu();
+		menu = new MenuBar();
+		menu.setSubmenuAbove(true);
 
 		if (ReportViewer.getInstance().isShowReturn()) {
 			menu.addItem("Возврат", () -> {
