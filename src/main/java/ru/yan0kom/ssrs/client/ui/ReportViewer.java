@@ -11,7 +11,6 @@ import com.google.web.bindery.autobean.shared.AutoBean;
 import com.google.web.bindery.autobean.shared.AutoBeanCodex;
 
 import jsinterop.annotations.JsMethod;
-import ru.yan0kom.ssrs.client.SsrsClientGwt;
 import ru.yan0kom.ssrs.client.bean.Parameters;
 import ru.yan0kom.ssrs.client.bean.ReportExt;
 import ru.yan0kom.ssrs.client.bean.ServiceBeanFactory;
@@ -21,13 +20,13 @@ import ru.yan0kom.ssrs.client.service.ReportServiceGetExtCallback;
 public class ReportViewer implements ReportServiceGetExtCallback {
 	private static ReportViewer instance;
 	private Stack<Composite> reportStack;
-	
+
 	public static void init() {
 		if (instance == null) {
-			instance = new ReportViewer();			
+			instance = new ReportViewer();
 		}
 	}
-	
+
 	public static ReportViewer getInstance() {
 		return instance;
 	}
@@ -35,22 +34,22 @@ public class ReportViewer implements ReportServiceGetExtCallback {
 	private ReportViewer() {
 		reportStack = new Stack<>();
 	}
-	
+
 	@Override
 	public void onError(Response response, Throwable exception) {
-		RootLayoutPanel.get().add(new Label(makeErrorMessage(response, exception)));		
+		RootLayoutPanel.get().add(new Label(makeErrorMessage(response, exception)));
 	}
 
 	@Override
 	public void onGetExt(ReportExt ext) {
 		RootLayoutPanel.get().clear();
-		
+
 		if (ext.getTabs() == null) {
 			ReportView report = new ReportView(ext);
 			reportStack.push(report);
 			RootLayoutPanel.get().add(report);
 			report.load();
-		}else {
+		} else {
 			MultiTabReport mtReport = new MultiTabReport(ext);
 			reportStack.push(mtReport);
 			RootLayoutPanel.get().add(mtReport);
@@ -59,14 +58,14 @@ public class ReportViewer implements ReportServiceGetExtCallback {
 			}
 		}
 	}
-	
+
 	public static String makeErrorMessage(Response response, Throwable exception) {
 		if (exception != null) {
 			return exception.getMessage();
-		}else if (response != null) {
+		} else if (response != null) {
 			return response.getStatusText();
 		}
-		return "Unknown error";		
+		return "Unknown error";
 	}
 
 	@JsMethod(namespace = "ReportViewer")
@@ -75,16 +74,17 @@ public class ReportViewer implements ReportServiceGetExtCallback {
 		ServiceBeanFactory factory = GWT.create(ServiceBeanFactory.class);
 		String json;
 		if (linkParams != null) {
-			json = "{\"parameters\":[{\"name\":\""+linkParams.replaceAll("=", "\", \"value\":\"").replaceAll("&", "\"},{\"name\":\"")+"\"}]}";
-		}else {
+			json = "{\"parameters\":[{\"name\":\""
+					+ linkParams.replaceAll("=", "\", \"value\":\"").replaceAll("&", "\"},{\"name\":\"") + "\"}]}";
+		} else {
 			json = "{\"parameters\":[]}";
 		}
 		AutoBean<Parameters> bean = AutoBeanCodex.decode(factory, Parameters.class, json);
 		ReportService.getExt(linkPath, bean.as(), instance);
 
-		SsrsClientGwt.print(linkPath+", "+AutoBeanCodex.encode(bean).getPayload());		
+		// SsrsClientGwt.print(linkPath+", "+AutoBeanCodex.encode(bean).getPayload());
 	}
-	
+
 	public boolean isShowReturn() {
 		return reportStack.size() > 0;
 	}
@@ -104,5 +104,5 @@ public class ReportViewer implements ReportServiceGetExtCallback {
 		reportStack.pop();
 		RootLayoutPanel.get().add(reportStack.peek());
 	}
-	
+
 }

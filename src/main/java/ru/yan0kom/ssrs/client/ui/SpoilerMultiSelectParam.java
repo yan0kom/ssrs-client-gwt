@@ -18,11 +18,11 @@ public class SpoilerMultiSelectParam extends ParamInput {
 	private CheckBox allCheckbox;
 	private DisclosurePanel disclosurePanel;
 
-	public SpoilerMultiSelectParam(ParameterDefinition repParam, Consumer<ParameterDefinition> changeCallback) {
+	public SpoilerMultiSelectParam(ParameterDefinition repParam, Consumer<ParameterDefinition> changeCallback, Consumer<Integer> resizeCallback) {
 		valuesChanged = false;
 		enabled = true;
-		
-		//handler for checkbox with value (except "All")
+
+		// handler for checkbox with value (except "All")
 		ValueChangeHandler<Boolean> checkboxHandler = (ValueChangeEvent<Boolean> event) -> {
 			CheckBox source = (CheckBox) event.getSource();
 			repParam.setValueByLabel(source.getText(), event.getValue());
@@ -33,7 +33,8 @@ public class SpoilerMultiSelectParam extends ParamInput {
 		int allIdx = repParam.getIndexOfAll();
 		if (allIdx != -1) {
 			allCheckbox = new CheckBox(repParam.getValidLabel(allIdx));
-			allCheckbox.setValue(repParam.isValidValueSelected(allIdx));			
+			allCheckbox.setValue(repParam.isValidValueSelected(allIdx));
+
 			allCheckbox.addValueChangeHandler((ValueChangeEvent<Boolean> event) -> {
 				CheckBox source = (CheckBox) event.getSource();
 				repParam.setValueByLabel(source.getText(), event.getValue());
@@ -43,21 +44,28 @@ public class SpoilerMultiSelectParam extends ParamInput {
 			});
 			panel.add(allCheckbox);
 		}
-		
-		disclosurePanel = new DisclosurePanel("Выбрать");		
+
+		disclosurePanel = new DisclosurePanel("Выбрать");
 		disclosurePanel.addCloseHandler((event) -> {
 			if (valuesChanged && changeCallback != null) {
 				changeCallback.accept(repParam);
 			}
 			valuesChanged = false;
-		});
-		disclosurePanel.addOpenHandler((event) -> {
-			if (!enabled) {
-				disclosurePanel.setOpen(false);
+			if (resizeCallback != null) {
+				resizeCallback.accept(getOffsetHeight());
 			}
 		});
-		
-		VerticalPanel checkList = new VerticalPanel();		
+		disclosurePanel.addOpenHandler((event) -> {
+			if (!enabled || allCheckbox.getValue()) {
+				disclosurePanel.setOpen(false);
+			} else {
+				if (resizeCallback != null) {
+					resizeCallback.accept(getOffsetHeight());
+				}
+			}
+		});
+
+		VerticalPanel checkList = new VerticalPanel();
 		for (int j = 0; j < repParam.getValidValuesCount(); ++j) {
 			if (j == allIdx) {
 				continue;
@@ -65,7 +73,7 @@ public class SpoilerMultiSelectParam extends ParamInput {
 			CheckBox valCheckbox = new CheckBox(repParam.getValidLabel(j));
 			valCheckbox.getElement().getStyle().setMarginRight(5, Unit.PX);
 			valCheckbox.setValue(repParam.isValidValueSelected(j));
-			valCheckbox.addValueChangeHandler(checkboxHandler);						
+			valCheckbox.addValueChangeHandler(checkboxHandler);
 			checkList.add(valCheckbox);
 		}
 
@@ -79,10 +87,10 @@ public class SpoilerMultiSelectParam extends ParamInput {
 		enabled = enable;
 		if (allCheckbox != null) {
 			allCheckbox.setEnabled(enable);
-		}		
-		if (!enabled) {
+		}
+		if (!enabled || allCheckbox.getValue()) {
 			disclosurePanel.setOpen(false);
 		}
-		disclosurePanel.setStyleName("gwt-DisclosurePanel-disabled", !enable);
+		disclosurePanel.setStyleName("gwt-DisclosurePanel-disabled", !enable || allCheckbox.getValue());
 	}
 }
